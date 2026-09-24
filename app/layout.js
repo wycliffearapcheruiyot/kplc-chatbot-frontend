@@ -19,6 +19,8 @@ const mono = IBM_Plex_Mono({
   variable: "--font-mono",
 });
 
+export const viewport = { themeColor: "#0c130f" };
+
 export const metadata = {
   title: "KPLC Assistant — Live Demo",
   description:

@@ -38,7 +38,7 @@ export default function ChatPanel({ ready, onSessionInactive }) {
         ]);
         onSessionInactive?.();
       } else {
-        setMessages((m) => [...m, { from: "bot", text: result.answer }]);
+        setMessages((m) => [...m, { from: "bot", text: result.answer, sources: result.sources }]);
       }
     } catch (err) {
       setMessages((m) => [
@@ -52,17 +52,31 @@ export default function ChatPanel({ ready, onSessionInactive }) {
 
   return (
     <section className="chat" aria-label="Chat">
-      <div className="chat-log" ref={logRef}>
+      <div className="chat-log" ref={logRef} role="log" aria-live="polite">
         {messages.length === 0 && (
           <div className="chat-empty">
             {ready
               ? "Ask about tokens, outages, tariffs, or faults — answers are grounded in Kenya Power's published guidance."
               : "The chat opens once the session is live."}
+            {ready && (
+              <div className="chips">
+                {EXAMPLE_QUESTIONS.map((q) => (
+                  <button key={q} type="button" className="chip-q" onClick={() => submit(q)}>{q}</button>
+                ))}
+              </div>
+            )}
           </div>
         )}
         {messages.map((m, i) => (
           <div key={i} className="msg" data-from={m.from}>
             {m.text}
+            {m.sources?.length > 0 && (
+              <div className="msg-sources">
+                {m.sources.map((s, j) => (
+                  <span key={j}>{s.url ? <a href={s.url} target="_blank" rel="noreferrer">{s.title || s.url}</a> : s.title}</span>
+                ))}
+              </div>
+            )}
           </div>
         ))}
         {sending && (

@@ -35,7 +35,7 @@ function useElapsed(startedAt, active) {
   }, [active]);
   if (!startedAt) return null;
   const secs = Math.max(0, Math.round(now - startedAt));
-  const m = Math.floor(secs / 60);
+  const m = String(Math.floor(secs / 60)).padStart(2, "0");
   const s = secs % 60;
   return `${m}:${String(s).padStart(2, "0")}`;
 }
@@ -57,10 +57,10 @@ export default function StatusMeter({ session, onStart, starting, startFailedSil
   const isBusy = status === "starting" || status === "preparing_dataset" || status === "waking";
 
   return (
-    <section className="meter" aria-label="Session status">
+    <section className="meter" aria-label="Session status" role="status">
       <div className="meter-track">
-        {steps.map((step) => (
-          <div key={step.key} className="meter-seg" data-state={stepState(step.key, status, order)} />
+        {steps.map((step, idx) => (
+          <div key={step.key} className="meter-seg" style={{ "--i": idx }} data-state={stepState(step.key, status, order)} />
         ))}
       </div>
       <div className="meter-labels">
