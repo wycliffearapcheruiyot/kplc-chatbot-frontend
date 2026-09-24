@@ -28,10 +28,11 @@ export default function Home() {
   const ensureWarm = useCallback(async () => {
     setWarming(true);
     setWarmState(initialWarmState());
-    await warmBackends((key, ok) => {
+    const allWarm = await warmBackends((key, ok) => {
       setWarmState((prev) => ({ ...prev, [key]: ok ? "ok" : "timeout" }));
     });
     setWarming(false);
+    return allWarm;
   }, []);
 
   const beginPolling = useCallback((opts) => {
@@ -80,7 +81,12 @@ export default function Home() {
     try {
       // Re-warm before starting: the page may have sat open long enough
       // for the free-tier services to fall asleep again.
-      await ensureWarm();
+      const allWarm = await ensureWarm();
+      if (!allWarm) {
+        throw new Error(
+          "The backend services are still waking up (free-tier cold start). Wait a minute and click Retry."
+        );
+      }
       const started = await startSession();
       if (started?.status) setSession(started);
       if (started?.status === "ready") {
