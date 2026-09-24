@@ -34,7 +34,7 @@ export default function Home() {
     setWarming(false);
   }, []);
 
-  const beginPolling = useCallback(() => {
+  const beginPolling = useCallback((opts) => {
     stopPollRef.current?.();
     stopPollRef.current = pollSession((s) => {
       setSession(s);
@@ -48,7 +48,7 @@ export default function Home() {
         setStarting(false);
         setStartFailedSilently(true);
       }
-    });
+    }, 4000, opts);
   }, []);
 
   // On load, warm all three backends first — nothing below is initiated
@@ -77,12 +77,22 @@ export default function Home() {
   async function handleStart() {
     setStarting(true);
     setStartFailedSilently(false);
-    // Re-warm before actually starting a session: if the page has sat
-    // open long enough, the free-tier services could be back asleep
-    // even though the initial warm-up already ran once.
-    await ensureWarm();
-    await startSession();
-    beginPolling();
+    try {
+      // Re-warm before starting: the page may have sat open long enough
+      // for the free-tier services to fall asleep again.
+      await ensureWarm();
+      const started = await startSession();
+      if (started?.status) setSession(started);
+      if (started?.status === "ready") {
+        setStarting(false);
+        return;
+      }
+      beginPolling({ ignoreIdleMs: 20000 });
+    } catch (e) {
+      // Show the real reason instead of a vague "didn't take".
+      setSession({ status: "error", error: e.message });
+      setStarting(false);
+    }
   }
 
   function handleSessionInactive() {
