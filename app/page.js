@@ -111,8 +111,8 @@ export default function Home() {
     <main className="shell">
       <div className="topbar">
         <div className="brand">
-          <div className="brand-name">KPLC Chatbot</div>
-          <div className="brand-sub">retrieval-grounded · self-hosted GPU demo</div>
+          <div className="brand-name">KPLC Assistant</div>
+          <div className="brand-sub">Answers grounded in Kenya Power&apos;s published guidance</div>
         </div>
         <span
           className="chip"
@@ -142,6 +142,8 @@ export default function Home() {
       />
 
       <ChatPanel ready={ready && !warming} onSessionInactive={handleSessionInactive} />
+
+      <hr className="tear" />
 
       <details className="about">
         <summary>How this demo is built</summary>

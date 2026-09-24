@@ -1,28 +1,31 @@
 /* ---------------------------------------------------------------
    Design tokens
-   Subject: a prepaid-electricity utility's assistant, built and
-   narrated as an engineering demo. The palette and the "meter"
-   motif below both come from that — a prepaid token/LCD readout,
-   not a generic dashboard kit.
+   Subject: Kenya Power's prepaid-electricity assistant, presented
+   as a working engineering demo. The palette comes from the grid
+   and the token meter — green because that's Kenya Power's own
+   colour, amber reserved only for the LED-style digit readouts a
+   real prepaid meter shows. Perforated "tear line" dividers and
+   receipt-style message rows nod to the physical token slip.
 ------------------------------------------------------------------ */
 :root {
-  --ink: #10151b;       /* page background */
-  --panel: #171f28;     /* card / panel background */
-  --panel-raised: #1d2731;
-  --line: #2a3441;      /* hairline borders */
-  --paper: #ece7da;     /* primary text, warm off-white like a receipt */
-  --paper-dim: #8c96a1; /* secondary text */
-  --current: #f2a93b;   /* amber — "current" as in electric current */
-  --current-dim: #7a5a24;
-  --live: #45b892;      /* teal-green — a live grid / LED indicator */
-  --live-dim: #245144;
+  --bg: #0c130f;         /* page background, green-cast near-black */
+  --panel: #131d17;      /* card / panel background */
+  --panel-raised: #182720;
+  --line: #29392f;       /* hairline borders */
+  --paper: #edf1e9;      /* primary text, LCD-backlight white */
+  --paper-dim: #90a396;  /* secondary text */
+  --grid: #33c46a;       /* brand green — live grid / primary action */
+  --grid-dim: #1f5c3a;
+  --token: #e8a33d;      /* token/LED amber — numeric readouts only */
+  --token-dim: #6b4c1f;
   --alert: #e2574c;
   --alert-dim: #5c2620;
 
-  --font-ui: var(--font-display), "Space Grotesk", system-ui, sans-serif;
+  --font-display: var(--font-display), "Arial Narrow", sans-serif;
+  --font-ui: var(--font-body), system-ui, sans-serif;
   --font-mono: var(--font-mono), "IBM Plex Mono", ui-monospace, monospace;
 
-  --radius: 3px;
+  --radius: 4px;
 }
 
 * {
@@ -36,7 +39,7 @@ body {
 }
 
 body {
-  background: var(--ink);
+  background: var(--bg);
   color: var(--paper);
   font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
@@ -45,12 +48,12 @@ body {
 }
 
 ::selection {
-  background: var(--current);
-  color: var(--ink);
+  background: var(--grid);
+  color: var(--bg);
 }
 
 a {
-  color: var(--current);
+  color: var(--grid);
 }
 
 button {
@@ -58,7 +61,7 @@ button {
 }
 
 :focus-visible {
-  outline: 2px solid var(--current);
+  outline: 2px solid var(--grid);
   outline-offset: 2px;
 }
 
@@ -75,61 +78,83 @@ button {
 .shell {
   max-width: 720px;
   margin: 0 auto;
-  padding: 28px 20px 64px;
+  padding: 0 20px 64px;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 22px;
 }
 
+/* Faceplate header — the branded top strip of a meter housing */
 .topbar {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
-  border-bottom: 1px solid var(--line);
-  padding-bottom: 14px;
+  margin: 0 -20px;
+  padding: 20px 20px 18px;
+  background: linear-gradient(180deg, var(--panel-raised), var(--panel));
+  border-bottom: 3px solid var(--grid);
 }
 
 .brand {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .brand-name {
-  font-weight: 700;
-  font-size: 1.05rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.9rem;
+  line-height: 1;
   letter-spacing: 0.01em;
+  color: var(--paper);
 }
 
 .brand-sub {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: 0.78rem;
   color: var(--paper-dim);
 }
 
 .chip {
   font-family: var(--font-mono);
   font-size: 0.72rem;
-  padding: 4px 9px;
+  padding: 5px 10px;
   border-radius: 20px;
   border: 1px solid var(--line);
   color: var(--paper-dim);
   white-space: nowrap;
+  background: var(--bg);
 }
 
 .chip[data-tone="live"] {
-  color: var(--live);
-  border-color: var(--live-dim);
+  color: var(--grid);
+  border-color: var(--grid-dim);
 }
 .chip[data-tone="current"] {
-  color: var(--current);
-  border-color: var(--current-dim);
+  color: var(--token);
+  border-color: var(--token-dim);
 }
 .chip[data-tone="alert"] {
   color: var(--alert);
   border-color: var(--alert-dim);
+}
+
+/* Perforated tear-line, used between major sections like a token slip */
+.tear {
+  height: 1px;
+  margin: 0;
+  border: none;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--line) 0,
+    var(--line) 6px,
+    transparent 6px,
+    transparent 12px
+  );
 }
 
 /* ---------------------------------------------------------------
@@ -158,7 +183,7 @@ button {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--current);
+  background: var(--token);
   margin-right: 8px;
   animation: pulse-fill 1.2s ease-in-out infinite;
 }
@@ -189,7 +214,7 @@ button {
 }
 
 .warmup-item[data-state="ok"] .warmup-dot {
-  background: var(--live);
+  background: var(--grid);
 }
 
 .warmup-item[data-state="timeout"] .warmup-dot {
@@ -197,7 +222,7 @@ button {
 }
 
 .warmup-item[data-state="pending"] .warmup-dot {
-  background: var(--current);
+  background: var(--token);
   animation: pulse-fill 1.2s ease-in-out infinite;
 }
 
@@ -211,7 +236,7 @@ button {
 }
 
 .warmup-item[data-state="ok"] .warmup-state {
-  color: var(--live);
+  color: var(--grid);
 }
 
 .warmup-item[data-state="timeout"] .warmup-state {
@@ -254,7 +279,7 @@ button {
 }
 
 .meter-seg[data-state="done"] {
-  background: var(--current-dim);
+  background: var(--grid-dim);
 }
 
 .meter-seg[data-state="active"] {
@@ -265,13 +290,13 @@ button {
   content: "";
   position: absolute;
   inset: 0;
-  background: var(--current);
+  background: var(--token);
   animation: pulse-fill 1.4s ease-in-out infinite;
   transform-origin: left;
 }
 
 .meter-seg[data-state="live"] {
-  background: var(--live);
+  background: var(--grid);
 }
 
 .meter-seg[data-state="alert"] {
@@ -298,9 +323,8 @@ button {
   flex: 1;
   font-family: var(--font-mono);
   font-size: 0.64rem;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   color: var(--paper-dim);
-  text-transform: uppercase;
 }
 
 .meter-labels span[data-current="true"] {
@@ -309,23 +333,36 @@ button {
 
 .meter-readout {
   display: flex;
-  align-items: baseline;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
 .meter-status-text {
   font-size: 1.15rem;
-  font-weight: 500;
+  font-weight: 700;
+  font-family: var(--font-ui);
 }
 
 .meter-status-detail {
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
   color: var(--paper-dim);
   margin-top: 4px;
-  line-height: 1.5;
+  line-height: 1.55;
+  max-width: 46ch;
+}
+
+/* LED-style digit readout for the boot timer — the one bold move */
+.meter-digits {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--token);
+  text-shadow: 0 0 14px rgba(232, 163, 61, 0.35);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .meter-error {
@@ -342,11 +379,12 @@ button {
 .start-btn {
   margin-top: 16px;
   width: 100%;
-  padding: 13px 16px;
-  background: var(--current);
-  color: #1a1206;
+  padding: 14px 16px;
+  background: var(--grid);
+  color: #04140b;
   border: none;
   border-radius: var(--radius);
+  font-family: var(--font-ui);
   font-weight: 700;
   font-size: 0.95rem;
   cursor: pointer;
@@ -354,7 +392,7 @@ button {
 }
 
 .start-btn:hover:not(:disabled) {
-  background: #f7bb5c;
+  background: #4ed687;
 }
 
 .start-btn:disabled {
@@ -367,13 +405,13 @@ button {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--current);
+  background: var(--token);
   margin-right: 8px;
   animation: pulse-fill 1.2s ease-in-out infinite;
 }
 
 /* ---------------------------------------------------------------
-   Chat panel
+   Chat panel — messages read like lines printed on a token receipt
 ------------------------------------------------------------------ */
 .chat {
   border: 1px solid var(--line);
@@ -389,7 +427,7 @@ button {
   padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   overflow-y: auto;
   max-height: 50vh;
 }
@@ -406,21 +444,25 @@ button {
 .msg {
   max-width: 85%;
   padding: 10px 13px;
-  border-radius: var(--radius);
+  border-radius: 2px;
   font-size: 0.92rem;
   line-height: 1.55;
+  border-left: 2px solid transparent;
 }
 
 .msg[data-from="user"] {
   align-self: flex-end;
-  background: var(--current-dim);
+  background: var(--panel-raised);
+  border-left-color: var(--grid);
   color: var(--paper);
 }
 
 .msg[data-from="bot"] {
   align-self: flex-start;
   background: var(--panel-raised);
+  border-left-color: var(--token);
   border: 1px solid var(--line);
+  border-left: 2px solid var(--token);
 }
 
 .msg[data-from="system"] {
@@ -442,7 +484,7 @@ button {
 
 .chat-input {
   flex: 1;
-  background: var(--ink);
+  background: var(--bg);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   color: var(--paper);
@@ -456,11 +498,11 @@ button {
 }
 
 .chat-send {
-  background: var(--current);
-  color: #1a1206;
+  background: var(--grid);
+  color: #04140b;
   border: none;
   border-radius: var(--radius);
-  padding: 0 18px;
+  padding: 0 20px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -489,10 +531,10 @@ button {
 .about summary {
   cursor: pointer;
   padding: 14px 0;
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 0.86rem;
   color: var(--paper-dim);
-  letter-spacing: 0.02em;
 }
 
 .about summary:hover {
@@ -525,11 +567,18 @@ footer.foot {
   font-size: 0.7rem;
   color: var(--paper-dim);
   opacity: 0.7;
+  padding-bottom: 8px;
 }
 
 @media (max-width: 480px) {
+  .brand-name {
+    font-size: 1.55rem;
+  }
   .meter-labels span {
     font-size: 0.56rem;
+  }
+  .meter-digits {
+    font-size: 1.3rem;
   }
   .msg {
     max-width: 92%;

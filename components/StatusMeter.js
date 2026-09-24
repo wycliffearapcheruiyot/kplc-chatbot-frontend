@@ -85,11 +85,16 @@ export default function StatusMeter({ session, onStart, starting, startFailedSil
             {status === "waking" && "Contacting the gateway — a sleeping free-tier service can take up to a minute to answer."}
             {status === "preparing_dataset" &&
               "First run only: copying the model weights into Kaggle. This can take a while — feel free to leave the tab open."}
-            {status === "starting" && `Loading Qwen3-4B-Instruct-2507 and opening the tunnel${elapsed ? ` · ${elapsed} elapsed` : "…"}`}
+            {status === "starting" && "Loading Qwen3-4B-Instruct-2507 and opening the tunnel…"}
             {status === "ready" && "Ask a question below. The session ends itself after 15 minutes idle."}
             {status === "error" && "See the detail below, then try again."}
           </div>
         </div>
+        {elapsed && (isBusy || status === "ready") && (
+          <div className="meter-digits" aria-label="Elapsed time">
+            {elapsed}
+          </div>
+        )}
       </div>
 
       {status === "error" && session?.error && (
