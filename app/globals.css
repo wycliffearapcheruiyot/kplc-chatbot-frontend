@@ -133,6 +133,102 @@ button {
 }
 
 /* ---------------------------------------------------------------
+   Warm-up panel — pinging all three Render services before anything
+   else on the page happens
+------------------------------------------------------------------ */
+.warmup {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 14px 16px;
+}
+
+.warmup-title {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--paper-dim);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.warmup-title::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--current);
+  margin-right: 8px;
+  animation: pulse-fill 1.2s ease-in-out infinite;
+}
+
+.warmup-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.warmup-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.warmup-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--line);
+  flex-shrink: 0;
+}
+
+.warmup-item[data-state="ok"] .warmup-dot {
+  background: var(--live);
+}
+
+.warmup-item[data-state="timeout"] .warmup-dot {
+  background: var(--alert);
+}
+
+.warmup-item[data-state="pending"] .warmup-dot {
+  background: var(--current);
+  animation: pulse-fill 1.2s ease-in-out infinite;
+}
+
+.warmup-label {
+  flex: 1;
+  color: var(--paper);
+}
+
+.warmup-state {
+  color: var(--paper-dim);
+}
+
+.warmup-item[data-state="ok"] .warmup-state {
+  color: var(--live);
+}
+
+.warmup-item[data-state="timeout"] .warmup-state {
+  color: var(--alert);
+}
+
+.warmup-detail {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--paper-dim);
+  line-height: 1.5;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+/* ---------------------------------------------------------------
    Meter panel — the session-lifecycle hero
 ------------------------------------------------------------------ */
 .meter {

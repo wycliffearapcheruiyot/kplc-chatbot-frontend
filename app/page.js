@@ -3,13 +3,36 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import StatusMeter from "../components/StatusMeter";
 import ChatPanel from "../components/ChatPanel";
-import { startSession, pollSession, getStatus } from "../lib/api";
+import WarmupPanel from "../components/WarmupPanel";
+import { startSession, pollSession, getStatus, warmBackends, warmTargets } from "../lib/api";
+
+const TARGETS = warmTargets();
+
+function initialWarmState() {
+  return Object.fromEntries(TARGETS.map((t) => [t.key, "pending"]));
+}
 
 export default function Home() {
   const [session, setSession] = useState(null);
   const [starting, setStarting] = useState(false);
   const [startFailedSilently, setStartFailedSilently] = useState(false);
+  const [warming, setWarming] = useState(true);
+  const [warmState, setWarmState] = useState(initialWarmState);
   const stopPollRef = useRef(null);
+
+  // Pings the gateway, session backend and dataset backend in parallel
+  // and waits for all three before resolving — the "warm first" gate
+  // referenced everywhere below. Safe to call more than once (e.g. right
+  // before starting a demo that's sat idle long enough for Render to
+  // put the services back to sleep).
+  const ensureWarm = useCallback(async () => {
+    setWarming(true);
+    setWarmState(initialWarmState());
+    await warmBackends((key, ok) => {
+      setWarmState((prev) => ({ ...prev, [key]: ok ? "ok" : "timeout" }));
+    });
+    setWarming(false);
+  }, []);
 
   const beginPolling = useCallback(() => {
     stopPollRef.current?.();
@@ -28,12 +51,15 @@ export default function Home() {
     });
   }, []);
 
-  // On load, check current state once (in case a session is already
-  // running from an earlier visit or another tab) and start polling
-  // only if something is actually in flight.
+  // On load, warm all three backends first — nothing below is initiated
+  // until that settles — then check current state once (in case a
+  // session is already running from an earlier visit or another tab)
+  // and start polling only if something is actually in flight.
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      await ensureWarm();
+      if (cancelled) return;
       const s = await getStatus();
       if (cancelled) return;
       setSession(s);
@@ -46,11 +72,15 @@ export default function Home() {
       cancelled = true;
       stopPollRef.current?.();
     };
-  }, [beginPolling]);
+  }, [beginPolling, ensureWarm]);
 
   async function handleStart() {
     setStarting(true);
     setStartFailedSilently(false);
+    // Re-warm before actually starting a session: if the page has sat
+    // open long enough, the free-tier services could be back asleep
+    // even though the initial warm-up already ran once.
+    await ensureWarm();
     await startSession();
     beginPolling();
   }
@@ -70,20 +100,32 @@ export default function Home() {
         </div>
         <span
           className="chip"
-          data-tone={ready ? "live" : session?.status === "error" ? "alert" : session?.status ? "current" : undefined}
+          data-tone={
+            warming ? undefined : ready ? "live" : session?.status === "error" ? "alert" : session?.status ? "current" : undefined
+          }
         >
-          {ready ? "● live" : session?.status === "error" ? "● error" : session?.status ? `● ${session.status}` : "● checking…"}
+          {warming
+            ? "● warming up"
+            : ready
+            ? "● live"
+            : session?.status === "error"
+            ? "● error"
+            : session?.status
+            ? `● ${session.status}`
+            : "● checking…"}
         </span>
       </div>
+
+      <WarmupPanel targets={TARGETS} warmState={warmState} warming={warming} />
 
       <StatusMeter
         session={session}
         onStart={handleStart}
-        starting={starting}
+        starting={starting || warming}
         startFailedSilently={startFailedSilently}
       />
 
-      <ChatPanel ready={ready} onSessionInactive={handleSessionInactive} />
+      <ChatPanel ready={ready && !warming} onSessionInactive={handleSessionInactive} />
 
       <details className="about">
         <summary>How this demo is built</summary>
