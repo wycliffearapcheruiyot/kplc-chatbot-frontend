@@ -1,0 +1,441 @@
+/* ---------------------------------------------------------------
+   Design tokens
+   Subject: a prepaid-electricity utility's assistant, built and
+   narrated as an engineering demo. The palette and the "meter"
+   motif below both come from that — a prepaid token/LCD readout,
+   not a generic dashboard kit.
+------------------------------------------------------------------ */
+:root {
+  --ink: #10151b;       /* page background */
+  --panel: #171f28;     /* card / panel background */
+  --panel-raised: #1d2731;
+  --line: #2a3441;      /* hairline borders */
+  --paper: #ece7da;     /* primary text, warm off-white like a receipt */
+  --paper-dim: #8c96a1; /* secondary text */
+  --current: #f2a93b;   /* amber — "current" as in electric current */
+  --current-dim: #7a5a24;
+  --live: #45b892;      /* teal-green — a live grid / LED indicator */
+  --live-dim: #245144;
+  --alert: #e2574c;
+  --alert-dim: #5c2620;
+
+  --font-ui: var(--font-display), "Space Grotesk", system-ui, sans-serif;
+  --font-mono: var(--font-mono), "IBM Plex Mono", ui-monospace, monospace;
+
+  --radius: 3px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+::selection {
+  background: var(--current);
+  color: var(--ink);
+}
+
+a {
+  color: var(--current);
+}
+
+button {
+  font-family: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--current);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------------------------------------------------------------
+   Shell
+------------------------------------------------------------------ */
+.shell {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 28px 20px 64px;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.topbar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 14px;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brand-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+}
+
+.brand-sub {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--paper-dim);
+}
+
+.chip {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 4px 9px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  color: var(--paper-dim);
+  white-space: nowrap;
+}
+
+.chip[data-tone="live"] {
+  color: var(--live);
+  border-color: var(--live-dim);
+}
+.chip[data-tone="current"] {
+  color: var(--current);
+  border-color: var(--current-dim);
+}
+.chip[data-tone="alert"] {
+  color: var(--alert);
+  border-color: var(--alert-dim);
+}
+
+/* ---------------------------------------------------------------
+   Meter panel — the session-lifecycle hero
+------------------------------------------------------------------ */
+.meter {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, var(--panel-raised), var(--panel));
+  padding: 22px 22px 20px;
+}
+
+.meter-track {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.meter-seg {
+  flex: 1;
+  height: 6px;
+  background: var(--line);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.meter-seg[data-state="done"] {
+  background: var(--current-dim);
+}
+
+.meter-seg[data-state="active"] {
+  background: var(--line);
+}
+
+.meter-seg[data-state="active"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--current);
+  animation: pulse-fill 1.4s ease-in-out infinite;
+  transform-origin: left;
+}
+
+.meter-seg[data-state="live"] {
+  background: var(--live);
+}
+
+.meter-seg[data-state="alert"] {
+  background: var(--alert);
+}
+
+@keyframes pulse-fill {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.meter-labels {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 18px;
+}
+
+.meter-labels span {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.04em;
+  color: var(--paper-dim);
+  text-transform: uppercase;
+}
+
+.meter-labels span[data-current="true"] {
+  color: var(--paper);
+}
+
+.meter-readout {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.meter-status-text {
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+
+.meter-status-detail {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--paper-dim);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.meter-error {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--alert);
+  background: rgba(226, 87, 76, 0.08);
+  border: 1px solid var(--alert-dim);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-top: 14px;
+}
+
+.start-btn {
+  margin-top: 16px;
+  width: 100%;
+  padding: 13px 16px;
+  background: var(--current);
+  color: #1a1206;
+  border: none;
+  border-radius: var(--radius);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.start-btn:hover:not(:disabled) {
+  background: #f7bb5c;
+}
+
+.start-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.spinner-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--current);
+  margin-right: 8px;
+  animation: pulse-fill 1.2s ease-in-out infinite;
+}
+
+/* ---------------------------------------------------------------
+   Chat panel
+------------------------------------------------------------------ */
+.chat {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  min-height: 360px;
+}
+
+.chat-log {
+  flex: 1;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  max-height: 50vh;
+}
+
+.chat-empty {
+  color: var(--paper-dim);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  margin: auto 0;
+  text-align: center;
+  padding: 20px 10px;
+}
+
+.msg {
+  max-width: 85%;
+  padding: 10px 13px;
+  border-radius: var(--radius);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.msg[data-from="user"] {
+  align-self: flex-end;
+  background: var(--current-dim);
+  color: var(--paper);
+}
+
+.msg[data-from="bot"] {
+  align-self: flex-start;
+  background: var(--panel-raised);
+  border: 1px solid var(--line);
+}
+
+.msg[data-from="system"] {
+  align-self: center;
+  background: transparent;
+  border: 1px dashed var(--line);
+  color: var(--paper-dim);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+.chat-form {
+  display: flex;
+  gap: 8px;
+  padding: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.chat-input {
+  flex: 1;
+  background: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--paper);
+  padding: 11px 13px;
+  font-family: inherit;
+  font-size: 0.92rem;
+}
+
+.chat-input:disabled {
+  opacity: 0.5;
+}
+
+.chat-send {
+  background: var(--current);
+  color: #1a1206;
+  border: none;
+  border-radius: var(--radius);
+  padding: 0 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chat-send:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.chat-locked {
+  padding: 18px;
+  text-align: center;
+  color: var(--paper-dim);
+  font-size: 0.88rem;
+}
+
+/* ---------------------------------------------------------------
+   Recruiter note (collapsible "how this works")
+------------------------------------------------------------------ */
+.about {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 4px 18px;
+}
+
+.about summary {
+  cursor: pointer;
+  padding: 14px 0;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--paper-dim);
+  letter-spacing: 0.02em;
+}
+
+.about summary:hover {
+  color: var(--paper);
+}
+
+.about-body {
+  padding-bottom: 16px;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: var(--paper-dim);
+}
+
+.about-body p {
+  margin: 0 0 12px;
+}
+
+.about-body code {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  color: var(--paper);
+  background: var(--panel-raised);
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+
+footer.foot {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--paper-dim);
+  opacity: 0.7;
+}
+
+@media (max-width: 480px) {
+  .meter-labels span {
+    font-size: 0.56rem;
+  }
+  .msg {
+    max-width: 92%;
+  }
+}
