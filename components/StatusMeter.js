@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const BASE_STEPS = [
   { key: "idle", label: "Standby" },
@@ -26,18 +26,40 @@ function stepState(stepKey, currentStatus, order) {
   return "";
 }
 
-function useElapsed(startedAt, active) {
-  const [now, setNow] = useState(() => Date.now() / 1000);
+// Ticks every 250ms and floors, so the display changes exactly on the
+// second instead of skipping or repeating when a tick runs late. Resyncs
+// when the tab becomes visible again (browsers throttle hidden tabs), and
+// keeps running once the session is live instead of freezing.
+function useElapsed(startedAt, running) {
+  const [now, setNow] = useState(() => Date.now());
+  const anchor = useRef(null);
+
   useEffect(() => {
-    if (!active) return;
-    const id = setInterval(() => setNow(Date.now() / 1000), 1000);
-    return () => clearInterval(id);
-  }, [active]);
-  if (!startedAt) return null;
-  const secs = Math.max(0, Math.round(now - startedAt));
+    if (!running) {
+      anchor.current = null;
+      return;
+    }
+    const sync = () => setNow(Date.now());
+    sync();
+    const id = setInterval(sync, 250);
+    document.addEventListener("visibilitychange", sync);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", sync);
+    };
+  }, [running]);
+
+  if (!running) return null;
+  if (anchor.current === null) {
+    // Trust the gateway's start time only if it is plausible (not in the
+    // future, under 1h old); otherwise count from when this page saw it.
+    const server = startedAt ? startedAt * 1000 : null;
+    anchor.current = server && server <= now && now - server < 3600000 ? server : now;
+  }
+  const secs = Math.max(0, Math.floor((now - anchor.current) / 1000));
   const m = String(Math.floor(secs / 60)).padStart(2, "0");
-  const s = secs % 60;
-  return `${m}:${String(s).padStart(2, "0")}`;
+  const sec = String(secs % 60).padStart(2, "0");
+  return `${m}:${sec}`;
 }
 
 export default function StatusMeter({ session, onStart, starting, startFailedSilently }) {
@@ -48,10 +70,7 @@ export default function StatusMeter({ session, onStart, starting, startFailedSil
     : BASE_STEPS;
   const order = steps.map((s) => s.key);
 
-  const elapsed = useElapsed(
-    session?.started_at,
-    status === "starting" || status === "preparing_dataset"
-  );
+  const elapsed = useElapsed(session?.started_at, status === "starting" || status === "preparing_dataset" || status === "ready");
 
   const canStart = status === "idle" || status === "error";
   const isBusy = status === "starting" || status === "preparing_dataset" || status === "waking";
@@ -92,7 +111,9 @@ export default function StatusMeter({ session, onStart, starting, startFailedSil
         </div>
         {elapsed && (isBusy || status === "ready") && (
           <div className="meter-digits" aria-label="Elapsed time">
-            {elapsed}
+            {elapsed.split("").map((ch, i) => (
+              <span key={`${i}${ch}`} className="dg">{ch}</span>
+            ))}
           </div>
         )}
       </div>

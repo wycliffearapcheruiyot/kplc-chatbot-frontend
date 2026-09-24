@@ -676,3 +676,9 @@ footer.foot {
   transition: border-color 0.15s ease, color 0.15s ease;
 }
 .chip-q:hover { border-color: var(--grid); color: var(--grid); }
+
+/* Only a digit that changed remounts, so it alone rolls in */
+.dg { display: inline-block; animation: digit-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes digit-in {
+  from { opacity: 0; transform: translateY(-40%); }
+}
