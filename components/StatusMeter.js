@@ -40,7 +40,7 @@ function useElapsed(startedAt, active) {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
-export default function StatusMeter({ session, onStart, starting }) {
+export default function StatusMeter({ session, onStart, starting, startFailedSilently }) {
   const status = session?.status || (starting ? "waking" : "idle");
   const showPrep = status === "preparing_dataset";
   const steps = showPrep
@@ -78,8 +78,10 @@ export default function StatusMeter({ session, onStart, starting }) {
             {STATUS_COPY[status] || status}
           </div>
           <div className="meter-status-detail">
-            {status === "idle" &&
+            {status === "idle" && !startFailedSilently &&
               "Runs on a free Kaggle GPU, started on demand — boot takes about a minute or two."}
+            {status === "idle" && startFailedSilently &&
+              "The last start attempt didn't take — the session never left idle. Worth checking the session backend is awake, then try again."}
             {status === "waking" && "Contacting the gateway — a sleeping free-tier service can take up to a minute to answer."}
             {status === "preparing_dataset" &&
               "First run only: copying the model weights into Kaggle. This can take a while — feel free to leave the tab open."}

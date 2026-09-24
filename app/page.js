@@ -8,13 +8,23 @@ import { startSession, pollSession, getStatus } from "../lib/api";
 export default function Home() {
   const [session, setSession] = useState(null);
   const [starting, setStarting] = useState(false);
+  const [startFailedSilently, setStartFailedSilently] = useState(false);
   const stopPollRef = useRef(null);
 
   const beginPolling = useCallback(() => {
     stopPollRef.current?.();
     stopPollRef.current = pollSession((s) => {
       setSession(s);
-      if (s?.status === "ready" || s?.status === "error") setStarting(false);
+      if (s?.status === "ready" || s?.status === "error") {
+        setStarting(false);
+        setStartFailedSilently(false);
+      } else if (s?.status === "idle") {
+        // The backend fell back to idle without ever reporting `error` —
+        // most likely the start attempt didn't actually launch a session.
+        // Surface that explicitly rather than silently resetting.
+        setStarting(false);
+        setStartFailedSilently(true);
+      }
     });
   }, []);
 
@@ -40,6 +50,7 @@ export default function Home() {
 
   async function handleStart() {
     setStarting(true);
+    setStartFailedSilently(false);
     await startSession();
     beginPolling();
   }
@@ -65,7 +76,12 @@ export default function Home() {
         </span>
       </div>
 
-      <StatusMeter session={session} onStart={handleStart} starting={starting} />
+      <StatusMeter
+        session={session}
+        onStart={handleStart}
+        starting={starting}
+        startFailedSilently={startFailedSilently}
+      />
 
       <ChatPanel ready={ready} onSessionInactive={handleSessionInactive} />
 
